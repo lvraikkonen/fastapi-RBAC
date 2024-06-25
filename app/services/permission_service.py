@@ -1,6 +1,7 @@
 from sqlalchemy.orm import Session
 from app.models.user import Permission
-from app.schemas.user import PermissionCreate
+from app.schemas.user import PermissionCreate, PermissionUpdate
+from fastapi import HTTPException
 
 
 def get_permission(db: Session, permission_id: int):
@@ -23,9 +24,21 @@ def create_permission(db: Session, permission: PermissionCreate):
     return db_permission
 
 
+def update_permission(db: Session, permission_id: int, permission_update: PermissionUpdate):
+    db_permission = get_permission(db, permission_id)
+    if not db_permission:
+        raise HTTPException(status_code=404, detail="Permission not found")
+
+    db_permission.name = permission_update.name
+    db.commit()
+    db.refresh(db_permission)
+    return db_permission
+
+
 def delete_permission(db: Session, permission_id: int):
     db_permission = get_permission(db, permission_id)
-    if db_permission:
-        db.delete(db_permission)
-        db.commit()
+    if not db_permission:
+        raise HTTPException(status_code=404, detail="Permission not found")
+    db.delete(db_permission)
+    db.commit()
     return db_permission

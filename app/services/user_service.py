@@ -2,10 +2,23 @@ from sqlalchemy.orm import Session
 from app.models.user import User, Role, Permission
 from app.schemas.user import UserCreate, UserUpdate
 from app.core.security import get_password_hash, verify_password
+from typing import List
+from fastapi import HTTPException
 
 
 def get_user(db: Session, user_id: int):
     return db.query(User).filter(User.id == user_id).first()
+
+
+def get_users(db: Session, skip: int = 0, limit: int = 10):
+    """
+    获取用户列表
+    :param db: 数据库会话
+    :param skip: 跳过的记录数
+    :param limit: 返回的记录数
+    :return: 用户列表
+    """
+    return db.query(User).offset(skip).limit(limit).all()
 
 
 def get_user_by_email(db: Session, email: str):
@@ -72,3 +85,15 @@ def delete_user(db: Session, user_id: int):
         db.delete(db_user)
         db.commit()
     return db_user
+
+
+def update_user_roles(db: Session, user_id: int, role_names: List[str]):
+    user = get_user(db, user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    roles = db.query(Role).filter(Role.name.in_(role_names)).all()
+    user.roles = roles
+    db.commit()
+    db.refresh(user)
+    return user

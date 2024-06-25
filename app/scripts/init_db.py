@@ -31,7 +31,7 @@ def init_sample_data():
     permissions = [
         "create_user", "delete_user", "edit_user", "view_user",
         "create_post", "delete_post", "edit_post", "view_post",
-        "manage_roles"
+        "manage_roles", "manage_users", "manage_permissions", "view_roles", "view_permissions"
     ]
     db_permissions = {}
     for perm_name in permissions:
@@ -45,9 +45,10 @@ def init_sample_data():
     # 定义角色-权限关系
     role_permissions = {
         "Admin": permissions,
-        "Manager": ["create_user", "edit_user", "view_user", "create_post", "delete_post", "edit_post", "view_post"],
-        "Editor": ["view_user", "create_post", "edit_post", "view_post"],
-        "User": ["view_user", "view_post"]
+        "Manager": ["create_user", "edit_user", "view_user", "view_roles", "view_permissions",
+                    "create_post", "delete_post", "edit_post", "view_post"],
+        "Editor": ["view_user", "view_roles", "view_permissions", "create_post", "edit_post", "view_post"],
+        "User": ["view_user", "view_post", "view_roles", "view_permissions"]
     }
 
     # 分配权限给角色

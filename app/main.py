@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 import asyncio
 from fastapi.middleware.cors import CORSMiddleware
-from app.api.v1.endpoints import user, role, permission, post
+from app.api.v1.endpoints import user, role, permission, post, admin
 from app.scripts.init_db import init_db, init_sample_data
 from contextlib import asynccontextmanager
 
@@ -33,6 +33,7 @@ app.include_router(user.router, prefix="/api/v1", tags=["users"])
 app.include_router(role.router, prefix="/api/v1", tags=["roles"])
 app.include_router(permission.router, prefix="/api/v1",tags=["permission"])
 app.include_router(post.router, prefix="/api/v1", tags=["posts"])
+app.include_router(admin.router, prefix="/api/v1/admin", tags=["admin"])
 
 
 @app.get("/")
