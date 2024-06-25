@@ -8,31 +8,9 @@ from app.schemas.user import UserCreate
 from app.models import user as user_models, post as post_models
 
 
-user_models.Base.metadata.create_all(bind=engine)
-post_models.Base.metadata.create_all(bind=engine)
-
-
 def init_db():
-    db = SessionLocal()
-
-    # 创建admin角色（如果不存在）
-    admin_role = db.query(Role).filter(Role.name == "admin").first()
-    if not admin_role:
-        admin_role = Role(name="admin")
-        db.add(admin_role)
-        db.commit()
-
-    # 创建一个管理员用户（如果不存在）
-    admin_user = db.query(User).filter(User.email == "admin@example.com").first()
-    if not admin_user:
-        admin_user = User(
-            email="admin@example.com",
-            hashed_password=get_password_hash("123456"),
-            is_active=True
-        )
-        admin_user.roles.append(admin_role)
-        db.add(admin_user)
-        db.commit()
+    user_models.Base.metadata.create_all(bind=engine)
+    post_models.Base.metadata.create_all(bind=engine)
 
 
 def init_sample_data():
@@ -85,16 +63,17 @@ def init_sample_data():
 
     # 创建样例用户
     sample_users = [
-        {"email": "admin@example.com", "password": "adminpass", "role": "Admin"},
-        {"email": "manager@example.com", "password": "managerpass", "role": "Manager"},
-        {"email": "editor@example.com", "password": "editorpass", "role": "Editor"},
-        {"email": "user@example.com", "password": "userpass", "role": "User"}
+        {"username": "admin", "email": "admin@example.com", "password": "adminpass", "role": "Admin"},
+        {"username": "manager", "email": "manager@example.com", "password": "managerpass", "role": "Manager"},
+        {"username": "editor", "email": "editor@example.com", "password": "editorpass", "role": "Editor"},
+        {"username": "user", "email": "user@example.com", "password": "userpass", "role": "User"}
     ]
 
     for user_data in sample_users:
-        existing_user = user_service.get_user_by_email(db, user_data["email"])
+        existing_user = user_service.get_user_by_name(db, user_data["username"])
         if not existing_user:
-            user = user_service.create_user(db, UserCreate(email=user_data["email"], password=user_data["password"]))
+            user = user_service.create_user(db, UserCreate(
+                username=user_data["username"], email=user_data["email"], password=user_data["password"]))
             role = db_roles[user_data["role"]]
             user.roles.append(role)
             db.commit()

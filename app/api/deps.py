@@ -10,7 +10,7 @@ def get_current_active_user(current_user: User = Depends(get_current_user)):
 
 
 def get_admin_user(current_user: User = Depends(get_current_active_user)):
-    if "admin" not in [role.name for role in current_user.roles]:
+    if "Admin" not in [role.name for role in current_user.roles]:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="The user doesn't have enough privileges"

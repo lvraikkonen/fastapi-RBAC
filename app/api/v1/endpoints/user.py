@@ -6,17 +6,31 @@ from app.core.security import create_access_token
 from app.services import user_service
 from app.schemas.user import User as UserSchema
 from app.schemas.user import User, UserCreate, UserUpdate, Token
-from app.api.deps import get_admin_user
+from app.api.deps import get_current_active_user, get_current_user
+from app.utils.decorators import permission_required
 
 router = APIRouter()
 
 
 @router.post("/register", response_model=UserSchema)
-def create_user(user: UserCreate, db: Session = Depends(get_db), admin_user: User = Depends(get_admin_user)):
-    db_user = user_service.get_user_by_email(db, email=user.email)
-    if db_user:
-        raise HTTPException(status_code=400, detail="Email already registered")
-    return user_service.create_user(db=db, user=user)
+@permission_required("create_user")
+def create_user(user: UserCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    # 检查用户名是否已经存在
+    existing_user = user_service.get_user_by_name(db, user.username)
+    if existing_user:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Username already registered",
+        )
+    # 检查邮箱是否已经存在
+    existing_email = user_service.get_user_by_email(db, user.email)
+    if existing_email:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Email already registered",
+        )
+    db_user = user_service.create_user(db, user)
+    return db_user
 
 
 @router.post("/token", response_model=Token)
@@ -28,7 +42,7 @@ def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db:
             detail="Incorrect username or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    access_token = create_access_token(data={"sub": user.email})
+    access_token = create_access_token(data={"sub": user.username})
     return {"access_token": access_token, "token_type": "bearer"}
 
 
@@ -46,3 +60,8 @@ def delete_user(user_id: int, db: Session = Depends(get_db)):
     if db_user is None:
         raise HTTPException(status_code=404, detail="User not found")
     return db_user
+
+
+@router.get("/me", response_model=User)
+def read_users_me(current_user: User = Depends(get_current_active_user)):
+    return current_user

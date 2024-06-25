@@ -8,49 +8,53 @@ class Token(BaseModel):
 
 
 class TokenData(BaseModel):
-    email: Optional[str] = None
-
-
-class RoleBase(BaseModel):
-    name: str
-
-    class Config:
-        orm_mode = True
-
-
-class RoleCreate(RoleBase):
-    pass
-
-
-class Role(RoleBase):
-    id: int
-    permissions: List[str] = []
-
-    class Config:
-        orm_mode = True
+    username: Optional[str] = None
 
 
 class PermissionBase(BaseModel):
     name: str
 
 
-class PermissionCreate(PermissionBase):
-    pass
-
-
 class Permission(PermissionBase):
     id: int
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
-class RoleUpdate(BaseModel):
-    name: Optional[str] = None
+class RoleBase(BaseModel):
+    name: str
+
+    class Config:
+        from_attributes = True
+
+
+class Role(RoleBase):
+    id: int
+    permissions: List[Permission] = []
+
+    class Config:
+        from_attributes = True
+
+
+class RoleCreate(RoleBase):
+    permissions: List[str] = []  # 权限名称列表
+
+
+class RoleUpdate(RoleBase):
     permissions: Optional[List[str]] = None
 
 
+class PermissionCreate(PermissionBase):
+    pass
+
+
+class PermissionUpdate(PermissionBase):
+    pass
+
+
 class UserBase(BaseModel):
+    username: str
     email: EmailStr
 
 
@@ -64,7 +68,7 @@ class User(UserBase):
     roles: List[RoleBase] = []
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class UserUpdate(BaseModel):
