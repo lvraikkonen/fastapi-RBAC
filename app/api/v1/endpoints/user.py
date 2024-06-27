@@ -7,14 +7,12 @@ from app.services import user_service
 from app.schemas.user import User as UserSchema
 from app.schemas.user import User, UserCreate, UserUpdate, Token
 from app.api.deps import get_current_active_user, get_current_user
-from app.utils.decorators import permission_required
 
 router = APIRouter()
 
 
 @router.post("/register", response_model=UserSchema)
-@permission_required("create_user")
-def create_user(user: UserCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+def create_user(user: UserCreate, db: Session = Depends(get_db)):
     # 检查用户名是否已经存在
     existing_user = user_service.get_user_by_name(db, user.username)
     if existing_user:
@@ -46,7 +44,7 @@ def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db:
     return {"access_token": access_token, "token_type": "bearer"}
 
 
-@router.get("/me", response_model=User)
+@router.get("/users/me", response_model=User)
 def read_users_me(current_user: User = Depends(get_current_active_user)):
     return current_user
 
